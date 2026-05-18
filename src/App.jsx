@@ -49,20 +49,31 @@ const linearRegression = (pts) => {
   const slope = (n*sxy - sx*sy) / denom;
   return { slope, intercept: (sy - slope*sx) / n };
 };
-const buildChartData = (entries, yKey) => {
+const buildChartData = (entries, yKey, projectionMonths = 6) => {
   if (!entries.length) return [];
   const sorted = [...entries].sort((a,b)=>parseLocalDate(a.date)-parseLocalDate(b.date));
-  const t0 = parseLocalDate(sorted[0].date).getTime(), DAY = 86400000;
-  const toDays = (iso) => (parseLocalDate(iso).getTime()-t0)/DAY;
-  const reg = linearRegression(sorted.map(e=>({x:toDays(e.date),y:e[yKey]})));
+  const DAY = 86400000;
+
+  // Use only the last 60 days of entries for the trend regression
   const lastD = parseLocalDate(sorted[sorted.length-1].date);
-  const endD = new Date(lastD.getFullYear(), lastD.getMonth()+6, lastD.getDate());
+  const cutoff = new Date(lastD.getTime() - 60 * DAY);
+  const recentEntries = sorted.filter(e => parseLocalDate(e.date) >= cutoff);
+  const trendEntries = recentEntries.length >= 2 ? recentEntries : sorted;
+
+  // Regression origin is the first entry in the trend window
+  const t0trend = parseLocalDate(trendEntries[0].date).getTime();
+  const toDaysTrend = (iso) => (parseLocalDate(iso).getTime() - t0trend) / DAY;
+  const reg = linearRegression(trendEntries.map(e=>({x:toDaysTrend(e.date),y:e[yKey]})));
+
+  // Chart starts from first entry overall, ends projectionMonths after last entry
+  const endD = new Date(lastD.getFullYear(), lastD.getMonth() + projectionMonths, lastD.getDate());
   const actualMap = Object.fromEntries(sorted.map(e=>[e.date,e[yKey]]));
+
   const rows = [];
   const cursor = new Date(parseLocalDate(sorted[0].date));
   while (cursor <= endD) {
     const iso = localISO(cursor);
-    const xd = toDays(iso);
+    const xd = toDaysTrend(iso);
     rows.push({ date:iso, actual:actualMap[iso]??null, trend:reg?+(reg.slope*xd+reg.intercept).toFixed(2):null });
     cursor.setDate(cursor.getDate()+1);
   }
@@ -128,8 +139,8 @@ function HbA1cEditModal({ entry, onSave, onClose }) {
 }
 
 // ── charts ────────────────────────────────────────────────────────────────────
-function WeightChart({ entries }) {
-  const chartData = useMemo(()=>buildChartData(entries,"kg"),[entries]);
+function WeightChart({ entries, projectionMonths }) {
+  const chartData = useMemo(()=>buildChartData(entries,"kg",projectionMonths),[entries,projectionMonths]);
   if (!entries.length) return <div className="empty-chart">No data yet.</div>;
   const yFmt = (kg)=>{const{st,lbs}=kgToStLbs(kg);return`${st}st ${Math.round(lbs)}lb`;};
   const ticks = chartData.filter((_,i)=>i%14===0).map(r=>r.date);
@@ -149,8 +160,8 @@ function WeightChart({ entries }) {
   );
 }
 
-function HbA1cChart({ entries }) {
-  const chartData = useMemo(()=>buildChartData(entries,"score"),[entries]);
+function HbA1cChart({ entries, projectionMonths }) {
+  const chartData = useMemo(()=>buildChartData(entries,"score",projectionMonths),[entries,projectionMonths]);
   if (!entries.length) return <div className="empty-chart">No data yet.</div>;
   const ticks = chartData.filter((_,i)=>i%14===0).map(r=>r.date);
   return (
@@ -264,6 +275,8 @@ export default function App() {
   const [status,setStatus]           = useState("");
   const [editingW,setEditingW]       = useState(null);
   const [editingH,setEditingH]       = useState(null);
+  const [wProj,setWProj]             = useState(6);
+  const [hProj,setHProj]             = useState(6);
 
   const flash = (msg,err=false) => { setStatus({msg,err}); setTimeout(()=>setStatus(""),3000); };
 
@@ -370,7 +383,7 @@ export default function App() {
         .cancel-btn{padding:0.58rem 1.5rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#9ca3af;font-family:'DM Sans',sans-serif;font-weight:500;font-size:0.9rem;cursor:pointer}
         .cancel-btn:hover{background:rgba(255,255,255,0.1)}
         .chart-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:1.5rem}
-        .chart-card h3{font-family:'DM Serif Display',serif;font-size:1.15rem;color:#cbd5e1;margin-bottom:1.25rem}
+        .chart-card h3{font-family:'DM Serif Display',serif;font-size:1.15rem;color:#cbd5e1;margin-bottom:0}
         .empty-chart{color:#4b5563;font-size:0.9rem;text-align:center;padding:3rem 1rem}
         .list-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:1.5rem}
         .list-card h3{font-family:'DM Serif Display',serif;font-size:1.15rem;color:#cbd5e1;margin-bottom:1rem}
@@ -391,6 +404,12 @@ export default function App() {
         .badge-red{background:rgba(239,68,68,0.15);color:#ef4444}
         .hba1c-note{font-size:0.75rem;color:#4b5563;line-height:1.5}
         .loading{text-align:center;padding:5rem;color:#4b5563;font-size:0.9rem}
+        .chart-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;margin-bottom:1.25rem}
+        .chart-header h3{margin-bottom:0}
+        .projection-toggle{display:flex;align-items:center;gap:0.4rem;font-size:0.75rem;color:#6b7280}
+        .proj-btn{padding:0.25rem 0.6rem;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#6b7280;font-size:0.75rem;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif}
+        .proj-btn:hover{border-color:rgba(255,255,255,0.2);color:#d1d5db}
+        .proj-btn.active{background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.4);color:#f59e0b}
         .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:100;padding:1rem}
         .modal{background:#161c2a;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:1.75rem;width:100%;max-width:560px;display:flex;flex-direction:column;gap:1.25rem}
         .modal-header{display:flex;justify-content:space-between;align-items:center}
@@ -419,7 +438,18 @@ export default function App() {
             {tab==="weight" && (
               <div className="section">
                 <WeightInput onAdd={addWeight} />
-                <div className="chart-card"><h3>Weight Over Time</h3><WeightChart entries={weightEntries} /></div>
+                <div className="chart-card">
+                  <div className="chart-header">
+                    <h3>Weight Over Time</h3>
+                    <div className="projection-toggle">
+                      <span>Trend projection:</span>
+                      {[3,6,9,12].map(m=>(
+                        <button key={m} className={`proj-btn${wProj===m?" active":""}`} onClick={()=>setWProj(m)}>{m}m</button>
+                      ))}
+                    </div>
+                  </div>
+                  <WeightChart entries={weightEntries} projectionMonths={wProj} />
+                </div>
                 {weightEntries.length>0 && <div className="list-card"><h3>All Entries</h3><WeightList entries={weightEntries} onDelete={deleteWeight} onEdit={setEditingW} /></div>}
               </div>
             )}
@@ -428,7 +458,18 @@ export default function App() {
               <div className="section">
                 <HbA1cInput onAdd={addHba1c} />
                 <p className="hba1c-note">Normal: below 42 mmol/mol · Pre-diabetes: 42–47 · Diabetic: 48 and above.</p>
-                <div className="chart-card"><h3>HbA1c Over Time</h3><HbA1cChart entries={hba1cEntries} /></div>
+                <div className="chart-card">
+                  <div className="chart-header">
+                    <h3>HbA1c Over Time</h3>
+                    <div className="projection-toggle">
+                      <span>Trend projection:</span>
+                      {[3,6,9,12].map(m=>(
+                        <button key={m} className={`proj-btn${hProj===m?" active":""}`} onClick={()=>setHProj(m)}>{m}m</button>
+                      ))}
+                    </div>
+                  </div>
+                  <HbA1cChart entries={hba1cEntries} projectionMonths={hProj} />
+                </div>
                 {hba1cEntries.length>0 && <div className="list-card"><h3>All Entries</h3><HbA1cList entries={hba1cEntries} onDelete={deleteHba1c} onEdit={setEditingH} /></div>}
               </div>
             )}

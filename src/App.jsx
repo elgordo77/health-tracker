@@ -65,12 +65,14 @@ const buildChartData = (entries, yKey, projectionMonths = 6) => {
   const toDaysTrend = (iso) => (parseLocalDate(iso).getTime() - t0trend) / DAY;
   const reg = linearRegression(trendEntries.map(e=>({x:toDaysTrend(e.date),y:e[yKey]})));
 
-  // Chart starts from first entry overall, ends projectionMonths after last entry
+  // Chart starts from 60 days before today, ends projectionMonths after last entry
+  const today = new Date();
+  const chartStart = new Date(today.getTime() - 60 * DAY);
   const endD = new Date(lastD.getFullYear(), lastD.getMonth() + projectionMonths, lastD.getDate());
   const actualMap = Object.fromEntries(sorted.map(e=>[e.date,e[yKey]]));
 
   const rows = [];
-  const cursor = new Date(parseLocalDate(sorted[0].date));
+  const cursor = new Date(chartStart);
   while (cursor <= endD) {
     const iso = localISO(cursor);
     const xd = toDaysTrend(iso);
@@ -149,7 +151,7 @@ function WeightChart({ entries, projectionMonths }) {
       <LineChart data={chartData} margin={{top:10,right:30,left:10,bottom:20}}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.07)" />
         <XAxis dataKey="date" ticks={ticks} tickFormatter={formatDate} tick={{fill:"#9ca3af",fontSize:11}} angle={-30} textAnchor="end" height={50} />
-        <YAxis tickFormatter={yFmt} tick={{fill:"#9ca3af",fontSize:11}} width={75} />
+        <YAxis tickFormatter={yFmt} tick={{fill:"#9ca3af",fontSize:11}} width={75} domain={[63.5, "auto"]} />
         <Tooltip content={<WeightTooltip />} />
         <Legend wrapperStyle={{color:"#9ca3af",fontSize:12,paddingTop:8}} />
         <ReferenceLine x={localISO()} stroke="rgba(255,255,255,0.25)" strokeDasharray="4 4" label={{value:"Today",fill:"#9ca3af",fontSize:10}} />

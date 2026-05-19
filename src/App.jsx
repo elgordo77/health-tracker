@@ -427,7 +427,7 @@ export default function App() {
       <div className="app">
         <div className="header">
           <div>
-            <h1 className="header-title">Health Tracker</h1>
+            <h1 className="header-title">Health Tracker - GC</h1>
             <p className="header-sub">Monitor your weight and HbA1c over time</p>
           </div>
           {status && <span className="save-status" style={{color:status.err?"#ef4444":"#34d399"}}>{status.msg}</span>}

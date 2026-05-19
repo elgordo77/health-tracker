@@ -155,7 +155,7 @@ function WeightChart({ entries, projectionMonths }) {
         <Tooltip content={<WeightTooltip />} />
         <Legend wrapperStyle={{color:"#9ca3af",fontSize:12,paddingTop:8}} />
         <ReferenceLine x={localISO()} stroke="rgba(255,255,255,0.25)" strokeDasharray="4 4" label={{value:"Today",fill:"#9ca3af",fontSize:10}} />
-        <Line type="monotone" dataKey="actual" name="Actual Weight" stroke="#34d399" strokeWidth={2} dot={p=>p.value!=null?<text key={p.key} x={p.cx} y={p.cy} textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight="bold" fill="#34d399">✕</text>:null} activeDot={false} connectNulls={false} />
+        <Line type="monotone" dataKey="actual" name="Actual Weight" stroke="#34d399" strokeWidth={2} dot={p=>p.value!=null?<text key={p.key} x={p.cx} y={p.cy} textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight="bold" fill="#34d399">✕</text>:null} activeDot={false} connectNulls />
         <Line type="monotone" dataKey="trend" name="6-Month Trend" stroke="#f59e0b" strokeWidth={1} strokeDasharray="6 3" dot={false} connectNulls opacity={0.5} />
       </LineChart>
     </ResponsiveContainer>

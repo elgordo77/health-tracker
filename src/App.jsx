@@ -155,8 +155,8 @@ function WeightChart({ entries, projectionMonths }) {
         <Tooltip content={<WeightTooltip />} />
         <Legend wrapperStyle={{color:"#9ca3af",fontSize:12,paddingTop:8}} />
         <ReferenceLine x={localISO()} stroke="rgba(255,255,255,0.25)" strokeDasharray="4 4" label={{value:"Today",fill:"#9ca3af",fontSize:10}} />
-        <Line type="monotone" dataKey="actual" name="Actual Weight" stroke="#34d399" strokeWidth={2.5} dot={p=>p.value!=null?<circle key={p.key} cx={p.cx} cy={p.cy} r={4} fill="#34d399"/>:null} activeDot={{r:6}} connectNulls={false} />
-        <Line type="monotone" dataKey="trend" name="6-Month Trend" stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="6 3" dot={false} connectNulls />
+        <Line type="monotone" dataKey="actual" name="Actual Weight" stroke="#34d399" strokeWidth={2} dot={p=>p.value!=null?<text key={p.key} x={p.cx} y={p.cy} textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight="bold" fill="#34d399">✕</text>:null} activeDot={false} connectNulls={false} />
+        <Line type="monotone" dataKey="trend" name="6-Month Trend" stroke="#f59e0b" strokeWidth={1} strokeDasharray="6 3" dot={false} connectNulls opacity={0.5} />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -178,7 +178,7 @@ function HbA1cChart({ entries, projectionMonths }) {
         <ReferenceLine y={42} stroke="rgba(251,146,60,0.4)" strokeDasharray="4 4" label={{value:"Pre-diabetic (42)",fill:"#fb923c",fontSize:10,position:"insideTopLeft"}} />
         <ReferenceLine x={localISO()} stroke="rgba(255,255,255,0.25)" strokeDasharray="4 4" label={{value:"Today",fill:"#9ca3af",fontSize:10}} />
         <Line type="monotone" dataKey="actual" name="HbA1c" stroke="#818cf8" strokeWidth={2.5} dot={p=>p.value!=null?<circle key={p.key} cx={p.cx} cy={p.cy} r={4} fill="#818cf8"/>:null} activeDot={{r:6}} connectNulls={false} />
-        <Line type="monotone" dataKey="trend" name="6-Month Trend" stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="6 3" dot={false} connectNulls />
+        <Line type="monotone" dataKey="trend" name="6-Month Trend" stroke="#f59e0b" strokeWidth={1} strokeDasharray="6 3" dot={false} connectNulls opacity={0.5} />
       </LineChart>
     </ResponsiveContainer>
   );

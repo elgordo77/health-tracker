@@ -455,7 +455,7 @@ export default function App() {
                       </div>
                       <div className="projection-toggle">
                         <span>Trend:</span>
-                        {[3,6,9,12].map(m=>(
+                        {[1,3,6,9,12].map(m=>(
                           <button key={m} className={`proj-btn${wProj===m?" active":""}`} onClick={()=>setWProj(m)}>{m}m</button>
                         ))}
                       </div>
@@ -483,7 +483,7 @@ export default function App() {
                       </div>
                       <div className="projection-toggle">
                         <span>Trend:</span>
-                        {[3,6,9,12].map(m=>(
+                        {[1,3,6,9,12].map(m=>(
                           <button key={m} className={`proj-btn${hProj===m?" active":""}`} onClick={()=>setHProj(m)}>{m}m</button>
                         ))}
                       </div>

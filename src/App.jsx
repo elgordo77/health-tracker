@@ -49,7 +49,7 @@ const linearRegression = (pts) => {
   const slope = (n*sxy - sx*sy) / denom;
   return { slope, intercept: (sy - slope*sx) / n };
 };
-const buildChartData = (entries, yKey, projectionMonths = 6) => {
+const buildChartData = (entries, yKey, projectionMonths = 6, lookbackDays = 60) => {
   if (!entries.length) return [];
   const sorted = [...entries].sort((a,b)=>parseLocalDate(a.date)-parseLocalDate(b.date));
   const DAY = 86400000;
@@ -65,9 +65,9 @@ const buildChartData = (entries, yKey, projectionMonths = 6) => {
   const toDaysTrend = (iso) => (parseLocalDate(iso).getTime() - t0trend) / DAY;
   const reg = linearRegression(trendEntries.map(e=>({x:toDaysTrend(e.date),y:e[yKey]})));
 
-  // Chart starts from 60 days before today, ends projectionMonths after last entry
+  // Chart starts from lookbackDays before today, ends projectionMonths after last entry
   const today = new Date();
-  const chartStart = new Date(today.getTime() - 60 * DAY);
+  const chartStart = new Date(today.getTime() - lookbackDays * DAY);
   const endD = new Date(lastD.getFullYear(), lastD.getMonth() + projectionMonths, lastD.getDate());
   const actualMap = Object.fromEntries(sorted.map(e=>[e.date,e[yKey]]));
 
@@ -141,8 +141,8 @@ function HbA1cEditModal({ entry, onSave, onClose }) {
 }
 
 // ── charts ────────────────────────────────────────────────────────────────────
-function WeightChart({ entries, projectionMonths }) {
-  const chartData = useMemo(()=>buildChartData(entries,"kg",projectionMonths),[entries,projectionMonths]);
+function WeightChart({ entries, projectionMonths, lookbackDays }) {
+  const chartData = useMemo(()=>buildChartData(entries,"kg",projectionMonths,lookbackDays),[entries,projectionMonths,lookbackDays]);
   if (!entries.length) return <div className="empty-chart">No data yet.</div>;
   const yFmt = (kg)=>{const{st,lbs}=kgToStLbs(kg);return`${st}st ${Math.round(lbs)}lb`;};
   const ticks = chartData.filter((_,i)=>i%14===0).map(r=>r.date);
@@ -162,8 +162,8 @@ function WeightChart({ entries, projectionMonths }) {
   );
 }
 
-function HbA1cChart({ entries, projectionMonths }) {
-  const chartData = useMemo(()=>buildChartData(entries,"score",projectionMonths),[entries,projectionMonths]);
+function HbA1cChart({ entries, projectionMonths, lookbackDays }) {
+  const chartData = useMemo(()=>buildChartData(entries,"score",projectionMonths,lookbackDays),[entries,projectionMonths,lookbackDays]);
   if (!entries.length) return <div className="empty-chart">No data yet.</div>;
   const ticks = chartData.filter((_,i)=>i%14===0).map(r=>r.date);
   return (
@@ -279,6 +279,8 @@ export default function App() {
   const [editingH,setEditingH]       = useState(null);
   const [wProj,setWProj]             = useState(6);
   const [hProj,setHProj]             = useState(6);
+  const [wLook,setWLook]             = useState(60);
+  const [hLook,setHLook]             = useState(60);
 
   const flash = (msg,err=false) => { setStatus({msg,err}); setTimeout(()=>setStatus(""),3000); };
 
@@ -408,6 +410,7 @@ export default function App() {
         .loading{text-align:center;padding:5rem;color:#4b5563;font-size:0.9rem}
         .chart-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;margin-bottom:1.25rem}
         .chart-header h3{margin-bottom:0}
+        .chart-controls{display:flex;gap:1rem;flex-wrap:wrap;align-items:center}
         .projection-toggle{display:flex;align-items:center;gap:0.4rem;font-size:0.75rem;color:#6b7280}
         .proj-btn{padding:0.25rem 0.6rem;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#6b7280;font-size:0.75rem;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif}
         .proj-btn:hover{border-color:rgba(255,255,255,0.2);color:#d1d5db}
@@ -443,14 +446,22 @@ export default function App() {
                 <div className="chart-card">
                   <div className="chart-header">
                     <h3>Weight Over Time</h3>
-                    <div className="projection-toggle">
-                      <span>Trend projection:</span>
-                      {[3,6,9,12].map(m=>(
-                        <button key={m} className={`proj-btn${wProj===m?" active":""}`} onClick={()=>setWProj(m)}>{m}m</button>
-                      ))}
+                    <div className="chart-controls">
+                      <div className="projection-toggle">
+                        <span>View:</span>
+                        {[{d:30,l:"1m"},{d:60,l:"2m"},{d:90,l:"3m"},{d:180,l:"6m"}].map(({d,l})=>(
+                          <button key={d} className={`proj-btn${wLook===d?" active":""}`} onClick={()=>setWLook(d)}>{l}</button>
+                        ))}
+                      </div>
+                      <div className="projection-toggle">
+                        <span>Trend:</span>
+                        {[3,6,9,12].map(m=>(
+                          <button key={m} className={`proj-btn${wProj===m?" active":""}`} onClick={()=>setWProj(m)}>{m}m</button>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  <WeightChart entries={weightEntries} projectionMonths={wProj} />
+                  <WeightChart entries={weightEntries} projectionMonths={wProj} lookbackDays={wLook} />
                 </div>
                 {weightEntries.length>0 && <div className="list-card"><h3>All Entries</h3><WeightList entries={weightEntries} onDelete={deleteWeight} onEdit={setEditingW} /></div>}
               </div>
@@ -463,14 +474,22 @@ export default function App() {
                 <div className="chart-card">
                   <div className="chart-header">
                     <h3>HbA1c Over Time</h3>
-                    <div className="projection-toggle">
-                      <span>Trend projection:</span>
-                      {[3,6,9,12].map(m=>(
-                        <button key={m} className={`proj-btn${hProj===m?" active":""}`} onClick={()=>setHProj(m)}>{m}m</button>
-                      ))}
+                    <div className="chart-controls">
+                      <div className="projection-toggle">
+                        <span>View:</span>
+                        {[{d:30,l:"1m"},{d:60,l:"2m"},{d:90,l:"3m"},{d:180,l:"6m"}].map(({d,l})=>(
+                          <button key={d} className={`proj-btn${hLook===d?" active":""}`} onClick={()=>setHLook(d)}>{l}</button>
+                        ))}
+                      </div>
+                      <div className="projection-toggle">
+                        <span>Trend:</span>
+                        {[3,6,9,12].map(m=>(
+                          <button key={m} className={`proj-btn${hProj===m?" active":""}`} onClick={()=>setHProj(m)}>{m}m</button>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  <HbA1cChart entries={hba1cEntries} projectionMonths={hProj} />
+                  <HbA1cChart entries={hba1cEntries} projectionMonths={hProj} lookbackDays={hLook} />
                 </div>
                 {hba1cEntries.length>0 && <div className="list-card"><h3>All Entries</h3><HbA1cList entries={hba1cEntries} onDelete={deleteHba1c} onEdit={setEditingH} /></div>}
               </div>

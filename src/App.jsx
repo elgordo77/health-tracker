@@ -160,7 +160,7 @@ function WeightDashboard({ entries, targetKg }) {
     { label:"Current Weight", value:`${st}st ${lbs}lbs`, sub:`${latest.kg} kg`, color:"#34d399" },
     
     { label:"This Month", value:(()=>{ const v=Math.abs(monthChange); const {st,lbs}=kgToStLbs(v); const sign=monthChange>=0?"-":"+"; return v<6.35?`${sign} ${(v/0.453592).toFixed(1)}lbs`:`${sign} ${st}st ${lbs}lbs`; })(), sub:monthChange>0?"lost this month":monthChange<0?"gained this month":"no change", color: monthChange>=0?"#34d399":"#ef4444" },
-    { label:"Weekly Rate", value:weeklyRate?(()=>{ const v=Math.abs(weeklyRate); const lbs=(v/0.453592).toFixed(1); return `${lbs}lbs/wk`; })():"—", sub:"based on last 60 days", color:"#f59e0b" },
+
     { label:"Personal Best", value:`${pbSt}st ${pbLbs}lbs`, sub:formatDate(pb.date), color:"#f472b6" },
     
 

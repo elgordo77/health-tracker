@@ -346,15 +346,15 @@ function WeightChart({ entries, projectionMonths, lookbackDays, targetKg }) {
   const pb = sorted.reduce((a,e)=>e.kg<a.kg?e:a,sorted[0]);
   return (
     <ResponsiveContainer width="100%" height={320}>
-      <LineChart data={chartData} margin={{top:10,right:30,left:10,bottom:20}}>
+      <LineChart data={chartData} margin={{top:10,right:15,left:0,bottom:20}}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.07)" />
         <XAxis dataKey="date" ticks={ticks} tickFormatter={formatDate} tick={{fill:"#9ca3af",fontSize:11}} angle={-30} textAnchor="end" height={50} />
-        <YAxis tickFormatter={yFmt} tick={{fill:"#9ca3af",fontSize:11}} width={75} domain={[63.5,"auto"]} />
+        <YAxis tickFormatter={yFmt} tick={{fill:"#9ca3af",fontSize:11}} width={72} domain={[63.5,"auto"]} />
         <Tooltip content={<WeightTooltip />} />
         <Legend wrapperStyle={{color:"#9ca3af",fontSize:12,paddingTop:8}} />
         <ReferenceLine x={localISO()} stroke="rgba(255,255,255,0.25)" strokeDasharray="4 4" label={{value:"Today",fill:"#9ca3af",fontSize:10}} />
         <ReferenceLine x={pb.date} stroke="rgba(244,114,182,0.4)" strokeDasharray="3 3" label={{value:"PB",fill:"#f472b6",fontSize:10}} />
-        {targetKg && <ReferenceLine y={targetKg} stroke="rgba(167,139,250,0.5)" strokeDasharray="4 2" label={{value:"Target",fill:"#a78bfa",fontSize:10,position:"insideTopRight"}} />}
+        {targetKg && <ReferenceLine y={targetKg} stroke="rgba(167,139,250,0.6)" strokeWidth={1.5} strokeDasharray="4 2" label={(props)=>{ const {viewBox:{x,y,width}}=props; return <text x={x+width-4} y={y-4} fill="#a78bfa" fontSize={10} textAnchor="end">Target</text>; }} />}
         <Line type="monotone" dataKey="actual" name="Actual Weight" stroke="#34d399" strokeWidth={2} dot={p=>p.value!=null?<text key={p.key} x={p.cx} y={p.cy} textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight="bold" fill="#34d399">✕</text>:null} activeDot={false} connectNulls />
         <Line type="monotone" dataKey="trend" name="Trend" stroke="#f59e0b" strokeWidth={1} strokeDasharray="6 3" dot={false} connectNulls opacity={0.5} />
       </LineChart>

@@ -354,7 +354,7 @@ function WeightChart({ entries, projectionMonths, lookbackDays, targetKg }) {
         <Legend wrapperStyle={{color:"#9ca3af",fontSize:12,paddingTop:8}} />
         <ReferenceLine x={localISO()} stroke="rgba(255,255,255,0.25)" strokeDasharray="4 4" label={{value:"Today",fill:"#9ca3af",fontSize:10}} />
         <ReferenceLine x={pb.date} stroke="rgba(244,114,182,0.4)" strokeDasharray="3 3" label={{value:"PB",fill:"#f472b6",fontSize:10}} />
-        {targetKg && <ReferenceLine y={targetKg} stroke="rgba(167,139,250,0.6)" strokeWidth={1.5} strokeDasharray="4 2" label={(props)=>{ const {viewBox:{x,y,width}}=props; return <text x={x+width-4} y={y-4} fill="#a78bfa" fontSize={10} textAnchor="end">Target</text>; }} />}
+        {targetKg && <ReferenceLine y={targetKg} stroke="#a78bfa" strokeWidth={2} strokeDasharray="4 2" />}
         <Line type="monotone" dataKey="actual" name="Actual Weight" stroke="#34d399" strokeWidth={2} dot={p=>p.value!=null?<text key={p.key} x={p.cx} y={p.cy} textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight="bold" fill="#34d399">✕</text>:null} activeDot={false} connectNulls />
         <Line type="monotone" dataKey="trend" name="Trend" stroke="#f59e0b" strokeWidth={1} strokeDasharray="6 3" dot={false} connectNulls opacity={0.5} />
       </LineChart>

@@ -158,12 +158,12 @@ function WeightDashboard({ entries, targetKg }) {
   const { st:pbSt, lbs:pbLbs } = kgToStLbs(pb.kg);
   const cards = [
     { label:"Current Weight", value:`${st}st ${lbs}lbs`, sub:`${latest.kg} kg`, color:"#34d399" },
-    { label:"Lost Since Start", value:`${totalLost.toFixed(1)} kg`, sub:totalLost>0?"Keep going! 💪":"", color:"#818cf8" },
-    { label:"This Month", value:`${monthChange>=0?"-":"+"} ${Math.abs(monthChange).toFixed(1)} kg`, sub:monthChange>0?"lost this month":monthChange<0?"gained this month":"no change", color: monthChange>=0?"#34d399":"#ef4444" },
-    { label:"Weekly Rate", value:weeklyRate?`${weeklyRate.toFixed(2)} kg/wk`:"—", sub:"based on last 60 days", color:"#f59e0b" },
+    
+    { label:"This Month", value:(()=>{ const v=Math.abs(monthChange); const {st,lbs}=kgToStLbs(v); const sign=monthChange>=0?"-":"+"; return v<6.35?`${sign} ${(v/0.453592).toFixed(1)}lbs`:`${sign} ${st}st ${lbs}lbs`; })(), sub:monthChange>0?"lost this month":monthChange<0?"gained this month":"no change", color: monthChange>=0?"#34d399":"#ef4444" },
+    { label:"Weekly Rate", value:weeklyRate?(()=>{ const v=Math.abs(weeklyRate); const lbs=(v/0.453592).toFixed(1); return `${lbs}lbs/wk`; })():"—", sub:"based on last 60 days", color:"#f59e0b" },
     { label:"Personal Best", value:`${pbSt}st ${pbLbs}lbs`, sub:formatDate(pb.date), color:"#f472b6" },
-    { label:"Logging Streak", value:`${streak} day${streak!==1?"s":""}`, sub:streak>0?"consecutive days":"", color:"#38bdf8" },
-    ...(targetDate ? [{ label:"Target Date", value:targetDate, sub:"estimated arrival", color:"#a78bfa" }] : []),
+    
+
   ];
   return (
     <div className="dashboard">
@@ -376,8 +376,8 @@ function HbA1cChart({ entries, projectionMonths, lookbackDays }) {
         <YAxis tick={{fill:"#9ca3af",fontSize:11}} unit=" mmol" />
         <Tooltip content={<HbA1cTooltip />} />
         <Legend wrapperStyle={{color:"#9ca3af",fontSize:12,paddingTop:8}} />
-        <ReferenceLine y={48} stroke="rgba(239,68,68,0.4)" strokeDasharray="4 4" label={{value:"Diabetic (48)",fill:"#ef4444",fontSize:10,position:"insideTopLeft"}} />
-        <ReferenceLine y={42} stroke="rgba(251,146,60,0.4)" strokeDasharray="4 4" label={{value:"Pre-diabetic (42)",fill:"#fb923c",fontSize:10,position:"insideTopLeft"}} />
+        <ReferenceLine y={48} stroke="rgba(239,68,68,0.4)" strokeDasharray="4 4" label={{value:"Diabetic (48)",fill:"#ef4444",fontSize:10,position:"insideTopLeft",offset:5}} />
+        <ReferenceLine y={42} stroke="rgba(251,146,60,0.4)" strokeDasharray="4 4" label={{value:"Pre-diabetic (42)",fill:"#fb923c",fontSize:10,position:"insideBottomLeft",offset:5}} />
         <ReferenceLine x={pb.date} stroke="rgba(244,114,182,0.4)" strokeDasharray="3 3" label={{value:"PB",fill:"#f472b6",fontSize:10}} />
         <ReferenceLine x={localISO()} stroke="rgba(255,255,255,0.25)" strokeDasharray="4 4" label={{value:"Today",fill:"#9ca3af",fontSize:10}} />
         <Line type="monotone" dataKey="actual" name="HbA1c" stroke="#818cf8" strokeWidth={2} dot={p=>p.value!=null?<text key={p.key} x={p.cx} y={p.cy} textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight="bold" fill="#818cf8">✕</text>:null} activeDot={false} connectNulls />
